@@ -1,5 +1,6 @@
 package com.sheygam.masa_2018_g1_12_12_18;
 
+import android.os.AsyncTask;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -8,6 +9,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
+
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private ProgressBar myProgress;
@@ -35,7 +38,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             try {
                 checkEmail(email);
                 checkPassword(password);
-                //TODO send request
+                new RegistrartionTask(email,password).execute();
             }catch (EmailValidException e){
                 showEmailError(e.getMessage());
             }catch (PasswordValidException e){
@@ -157,5 +160,48 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return false;
     }
 
+
+    private class RegistrartionTask extends AsyncTask<Void,Void,String>{
+        private String email, password;
+        private boolean isSuccess = true;
+
+        public RegistrartionTask(String email, String password) {
+            this.email = email;
+            this.password = password;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            showProgress();
+        }
+
+        @Override
+        protected String doInBackground(Void... voids) {
+            String result = "Registration OK";
+            try {
+                String token = HttpProvider.getInstance().registration(email,password);
+                StoreProvider.getInstance().saveToken(token);
+            } catch (IOException e){
+                e.printStackTrace();
+                result = "Connection error!Check your internet!";
+                isSuccess = false;
+            }catch (Exception e) {
+                e.printStackTrace();
+                result = e.getMessage();
+                isSuccess = false;
+            }
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            hideProgress();
+            if (isSuccess){
+                showNextView();
+            }else{
+                showError(s);
+            }
+        }
+    }
 
 }

@@ -3,9 +3,10 @@
     package="com.sheygam.masa_2018_g1_12_12_18">
 
 
-    <uses-permission android:name="an droid.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
+        android:name=".App"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"

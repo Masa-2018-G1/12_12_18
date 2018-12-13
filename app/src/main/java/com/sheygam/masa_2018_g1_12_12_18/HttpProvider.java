@@ -36,8 +36,8 @@ class HttpProvider {
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("POST");
         connection.setRequestProperty("Content-Type","application/json");
-        connection.setReadTimeout(10000);
-        connection.setConnectTimeout(10000);
+        connection.setReadTimeout(15000);
+        connection.setConnectTimeout(15000);
         connection.setDoOutput(true);
         connection.setDoInput(true);
 
