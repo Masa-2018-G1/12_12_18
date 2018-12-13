@@ -14,9 +14,19 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 class HttpProvider {
     private Gson gson;
+    private OkHttpClient client;
+    private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     private static final String BASE_URL = "https://contacts-telran.herokuapp.com";
     private static final HttpProvider ourInstance = new HttpProvider();
 
@@ -26,6 +36,11 @@ class HttpProvider {
 
     private HttpProvider() {
         gson = new Gson();
+//        client = new OkHttpClient();
+        client = new OkHttpClient.Builder()
+                .connectTimeout(15,TimeUnit.SECONDS)
+                .readTimeout(15,TimeUnit.SECONDS)
+                .build();
     }
 
     public String registration(String email, String password) throws Exception {
@@ -77,4 +92,44 @@ class HttpProvider {
             }
         }
     }
+
+    public String login(String email, String password) throws Exception {
+        AuthDto authDto = new AuthDto(email,password);
+        String json = gson.toJson(authDto);
+
+        RequestBody requestBody = RequestBody.create(JSON,json);
+
+        Request request = new Request.Builder()
+                .url(BASE_URL + "/api/login")
+                .post(requestBody)
+                .addHeader("Authorized","token")
+                .build();
+
+        Response response = client.newCall(request).execute();
+        if(response.isSuccessful()){
+            String responseJson = response.body().string();
+            AuthResponseDto responseDto = gson.fromJson(responseJson,AuthResponseDto.class);
+            return responseDto.getToken();
+        }else if(response.code() == 401){
+            throw new Exception("Wrong email or password!");
+        }else{
+            Log.d("MY_TAG", "login: " + response.body().string());
+            throw new Exception("Server error!");
+        }
+    }
+
+    public void asynclogin(String email,
+                           String password,
+                           Callback callback){
+        AuthDto authDto = new AuthDto(email,password);
+        String json = gson.toJson(authDto);
+        RequestBody requestBody = RequestBody.create(JSON,json);
+        Request request = new Request.Builder()
+                .url(BASE_URL + "/api/login")
+                .post(requestBody)
+                .build();
+
+        client.newCall(request).enqueue(callback);
+    }
+
 }
